@@ -1,5 +1,5 @@
-export const API_URL = 'http://192.168.1.5:8000/api/v1'
-export const MEDIA_URL = 'http://192.168.1.5:8000'
+export const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.1.5:8000/api/v1'
+export const MEDIA_URL = import.meta.env.VITE_MEDIA_URL || 'http://192.168.1.5:8000'
 
 /**
  * Construit l'URL complète pour un média (avatar, image d'annonce, etc.)

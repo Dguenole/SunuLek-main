@@ -15,6 +15,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - sunulek-network
 
   # Backend Django
   api:
@@ -27,7 +29,12 @@ services:
     environment:
       - DEBUG=False
       - SECRET_KEY=${SECRET_KEY:-change_this_secret_key_in_production}
-      - DATABASE_URL=postgres://sunulek:${DB_PASSWORD:-sunulek_secure_password_2026}@db:5432/sunulek
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=sunulek
+      - DB_USER=sunulek
+      - DB_PASSWORD=${DB_PASSWORD:-sunulek_secure_password_2026}
+      - DB_HOST=db
+      - DB_PORT=5432
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,api.sunulek.com}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://sunulek.com,https://www.sunulek.com}
       - EMAIL_HOST=${EMAIL_HOST:-smtp.gmail.com}
@@ -39,8 +46,22 @@ services:
     volumes:
       - static_files:/app/staticfiles
       - media_files:/app/media
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    networks:
+      - sunulek-network
+
+  # Frontend React
+  web:
+    build:
+      context: ./sunulek-web
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost/api/v1}
+        - VITE_MEDIA_URL=${VITE_MEDIA_URL:-http://localhost}
+    container_name: sunulek-web
+    restart: always
+    expose:
+      - "80"
     networks:
       - sunulek-network
 
@@ -51,6 +72,7 @@ services:
     restart: always
     depends_on:
       - api
+      - web
     ports:
       - "80:80"
       - "443:443"
