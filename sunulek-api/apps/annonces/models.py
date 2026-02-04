@@ -60,6 +60,7 @@ class Ad(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Dernière modification')
     published_at = models.DateTimeField(null=True, blank=True, verbose_name='Date de publication')
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='Date d\'expiration')
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='Date de suppression')
     
     class Meta:
         verbose_name = 'Annonce'
@@ -78,6 +79,20 @@ class Ad(models.Model):
     def increment_views(self):
         """Increment view count."""
         self.views_count += 1
+        self.save(update_fields=['views_count'])
+    
+    def soft_delete(self):
+        """Soft delete the ad."""
+        from django.utils import timezone
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save(update_fields=['deleted_at', 'is_active'])
+    
+    def restore(self):
+        """Restore a soft-deleted ad."""
+        self.deleted_at = None
+        self.is_active = True
+        self.save(update_fields=['deleted_at', 'is_active'])
         self.save(update_fields=['views_count'])
 
 

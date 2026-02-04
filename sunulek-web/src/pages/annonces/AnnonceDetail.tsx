@@ -3,14 +3,16 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowLeft, Heart, Share2, MapPin, Clock, Eye, User, 
-  Phone, Mail, ChevronLeft, ChevronRight, X, Flag, Loader2
+  Phone, Mail, ChevronLeft, ChevronRight, X, Flag, Loader2, MessageCircle
 } from 'lucide-react'
 import { useAd, useDeleteAd } from '@/hooks/useAds'
 import { useFavoriteToggle } from '@/hooks/useFavorites'
 import { useAuthStore } from '@/stores/authStore'
 import { formatPrice, formatDate, cn } from '@/lib/utils'
+import { getMediaUrl } from '@/lib/constants'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
+import { ContactSellerModal } from '@/components/messages'
 
 export default function AnnonceDetail() {
   const { slug } = useParams<{ slug: string }>()
@@ -24,6 +26,7 @@ export default function AnnonceDetail() {
   const [showGallery, setShowGallery] = useState(false)
   const [showPhone, setShowPhone] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showContact, setShowContact] = useState(false)
 
   if (isLoading) {
     return (
@@ -212,7 +215,9 @@ export default function AnnonceDetail() {
             <div className="flex flex-wrap gap-4 text-gray-600 mb-6">
               <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-gray-400" />
-                <span>{ad.region}</span>
+                <span>
+                  {[ad.neighborhood, ad.department, ad.region].filter(Boolean).join(', ')}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-gray-400" />
@@ -225,6 +230,17 @@ export default function AnnonceDetail() {
                 </div>
               )}
             </div>
+
+            {/* Localisation détaillée */}
+            {ad.address && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                <h3 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary-500" />
+                  Adresse
+                </h3>
+                <p className="text-gray-600">{ad.address}</p>
+              </div>
+            )}
 
             <hr className="my-6" />
 
@@ -245,7 +261,7 @@ export default function AnnonceDetail() {
             <div className="flex items-center gap-4 mb-6">
               {ad.user?.avatar ? (
                 <img 
-                  src={ad.user.avatar} 
+                  src={getMediaUrl(ad.user.avatar)} 
                   alt="" 
                   className="w-14 h-14 rounded-full object-cover" 
                 />
@@ -284,15 +300,27 @@ export default function AnnonceDetail() {
                 <Button 
                   className="w-full"
                   leftIcon={<Phone className="w-5 h-5" />}
-                  onClick={() => setShowPhone(!showPhone)}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login')
+                    } else {
+                      setShowPhone(!showPhone)
+                    }
+                  }}
                 >
                   {showPhone ? (ad.user?.phone || 'Non disponible') : 'Voir le téléphone'}
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  leftIcon={<Mail className="w-5 h-5" />}
-                  onClick={() => alert('Fonctionnalité de messagerie à implémenter')}
+                  leftIcon={<MessageCircle className="w-5 h-5" />}
+                  onClick={() => {
+                    if (isAuthenticated) {
+                      setShowContact(true)
+                    } else {
+                      navigate('/login')
+                    }
+                  }}
                 >
                   Contacter le vendeur
                 </Button>
@@ -405,6 +433,15 @@ export default function AnnonceDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Contact Seller Modal */}
+      <ContactSellerModal
+        isOpen={showContact}
+        onClose={() => setShowContact(false)}
+        adId={ad.id}
+        adTitle={ad.title}
+        sellerName={ad.user?.full_name || 'Vendeur'}
+      />
     </div>
   )
 }

@@ -23,7 +23,7 @@ export interface Category {
   slug: string
   icon?: string
   description?: string
-  annonces_count?: number
+  ads_count?: number
 }
 
 export interface AdImage {
@@ -59,7 +59,7 @@ export interface Ad {
   user_name?: string
   images?: AdImage[]
   primary_image?: string
-  status?: string
+  status?: 'draft' | 'pending' | 'active' | 'sold' | 'expired' | 'rejected'
   is_featured: boolean
   is_favorited?: boolean
   is_owner?: boolean
@@ -68,6 +68,7 @@ export interface Ad {
   created_at: string
   published_at?: string
   updated_at?: string
+  deleted_at?: string | null
 }
 
 export interface Favorite {
@@ -81,4 +82,53 @@ export interface PaginatedResponse<T> {
   next: string | null
   previous: string | null
   results: T[]
+}
+
+// Messaging types
+export interface MessageUser {
+  id: number
+  username: string
+  full_name: string
+  avatar?: string
+}
+
+export interface Message {
+  id: number
+  sender: MessageUser
+  content: string
+  is_read: boolean
+  is_mine: boolean
+  created_at: string
+}
+
+export interface LastMessage {
+  content: string
+  created_at: string
+  is_mine: boolean
+}
+
+export interface Conversation {
+  id: number
+  ad_title: string
+  ad_slug: string
+  ad_image?: string
+  ad_price?: number
+  other_user: MessageUser
+  last_message?: LastMessage
+  unread_count: number
+  created_at: string
+  updated_at: string
+  messages?: Message[]
+}
+
+// Legacy - keep for backward compatibility
+export interface ContactMessage {
+  id: number
+  ad: number
+  ad_title: string
+  message: string
+  phone?: string
+  sender_name: string
+  is_read: boolean
+  created_at: string
 }

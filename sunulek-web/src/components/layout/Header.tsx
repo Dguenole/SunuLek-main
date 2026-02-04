@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Menu, X, Search, Heart, User, LogOut, Plus, 
-  ChevronDown, Home, Grid3X3, Settings 
+  ChevronDown, Home, Grid3X3, Settings, MessageSquare 
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useLogout } from '@/hooks/useAuth'
+import { useUnreadMessagesCount } from '@/hooks/useMessages'
 import Button from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
+import { getMediaUrl } from '@/lib/constants'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -16,6 +18,7 @@ export default function Header() {
   const { isAuthenticated, user } = useAuthStore()
   const logout = useLogout()
   const navigate = useNavigate()
+  const { data: unreadCount } = useUnreadMessagesCount()
 
   const handleLogout = () => {
     logout.mutate()
@@ -58,6 +61,14 @@ export default function Header() {
                 <Link to="/favoris" className="p-2 text-gray-600 hover:text-primary-500 transition-colors">
                   <Heart className="w-5 h-5" />
                 </Link>
+                <Link to="/messages" className="relative p-2 text-gray-600 hover:text-primary-500 transition-colors">
+                  <MessageSquare className="w-5 h-5" />
+                  {unreadCount && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Link>
                 
                 {/* Profile Dropdown */}
                 <div className="relative">
@@ -66,7 +77,7 @@ export default function Header() {
                     className="flex items-center gap-2 p-2 rounded-xl hover:bg-gray-100 transition-colors"
                   >
                     {user?.avatar ? (
-                      <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      <img src={getMediaUrl(user.avatar)} alt="" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
                       <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                         <User className="w-4 h-4 text-primary-600" />
@@ -118,6 +129,19 @@ export default function Header() {
                           >
                             <Heart className="w-4 h-4" />
                             Favoris
+                          </Link>
+                          <Link
+                            to="/messages"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Messages
+                            {unreadCount && unreadCount > 0 && (
+                              <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                {unreadCount}
+                              </span>
+                            )}
                           </Link>
                           <hr className="my-2" />
                           <button
@@ -217,6 +241,19 @@ export default function Header() {
                   >
                     <Heart className="w-5 h-5 text-gray-600" />
                     Favoris
+                  </Link>
+                  <Link
+                    to="/messages"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50"
+                  >
+                    <MessageSquare className="w-5 h-5 text-gray-600" />
+                    Messages
+                    {unreadCount && unreadCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                   <button
                     onClick={() => { handleLogout(); setIsMenuOpen(false); }}

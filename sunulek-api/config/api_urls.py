@@ -9,4 +9,5 @@ urlpatterns = [
     path('annonces/', include('apps.annonces.urls')),
     path('categories/', include('apps.categories.urls')),
     path('favorites/', include('apps.favorites.urls')),
+    path('conversations/', include('apps.messages.urls')),
 ]

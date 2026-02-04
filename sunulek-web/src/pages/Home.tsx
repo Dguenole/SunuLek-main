@@ -125,7 +125,7 @@ export default function Home() {
                     <Card hoverable className="text-center py-6">
                       <span className="text-4xl mb-3 block">{category.icon || '📦'}</span>
                       <h3 className="font-medium text-gray-900">{category.name}</h3>
-                      <p className="text-sm text-gray-500">{category.annonces_count || 0} annonces</p>
+                      <p className="text-sm text-gray-500">{category.ads_count || 0} annonces</p>
                     </Card>
                   </Link>
                 </motion.div>

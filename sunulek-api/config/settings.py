@@ -15,8 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =============================================================================
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
-
+#ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1','192.168.1.5', cast=Csv())
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "192.168.1.5",
+]
 # =============================================================================
 # APPLICATIONS
 # =============================================================================
@@ -43,6 +47,7 @@ LOCAL_APPS = [
     'apps.annonces',
     'apps.categories',
     'apps.favorites',
+    'apps.messages',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -167,11 +172,18 @@ SIMPLE_JWT = {
 # =============================================================================
 # CORS SETTINGS
 # =============================================================================
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:5173',
-    cast=Csv()
-)
+#CORS_ALLOWED_ORIGINS = config(
+#    'CORS_ALLOWED_ORIGINS',
+#    default='http://localhost:3000,http://localhost:5173',
+#    cast=Csv()
+#)
+#CORS_ALLOWED_ORIGINS=[
+#    'http://localhost:3000',
+#    'http://localhost:5173',
+#    'http://192.168.1.5:3000',
+#    'http://192.168.1.5:5173',
+#]
+CORS_ALLOW_ALL_ORIGINS=True
 CORS_ALLOW_CREDENTIALS = True
 
 # =============================================================================

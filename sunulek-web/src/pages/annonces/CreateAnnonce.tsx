@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Upload, X, Plus, Loader2 } from 'lucide-react'
 import { useCategories } from '@/hooks/useCategories'
 import { useCreateAd } from '@/hooks/useAds'
-import { REGIONS_SENEGAL } from '@/lib/constants'
+import { REGIONS_SENEGAL, DEPARTMENTS_BY_REGION } from '@/lib/constants'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
@@ -23,6 +23,9 @@ export default function CreateAnnonce() {
     price: '',
     category: '',
     region: '',
+    department: '',
+    neighborhood: '',
+    address: '',
   })
 
   const [images, setImages] = useState<File[]>([])
@@ -60,6 +63,9 @@ export default function CreateAnnonce() {
     data.append('price', formData.price)
     data.append('category', formData.category)
     data.append('region', formData.region)
+    data.append('department', formData.department)
+    if (formData.neighborhood) data.append('neighborhood', formData.neighborhood)
+    if (formData.address) data.append('address', formData.address)
     
     images.forEach((image) => {
       data.append('images', image)
@@ -72,6 +78,9 @@ export default function CreateAnnonce() {
 
   const categoryOptions = categories?.map(c => ({ value: c.slug, label: c.name })) || []
   const regionOptions = REGIONS_SENEGAL.map(r => ({ value: r, label: r }))
+  const departmentOptions = formData.region 
+    ? (DEPARTMENTS_BY_REGION[formData.region] || []).map(d => ({ value: d, label: d }))
+    : []
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -165,10 +174,36 @@ export default function CreateAnnonce() {
                 options={regionOptions}
                 placeholder="Sélectionner"
                 value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, region: e.target.value, department: '' })}
                 required
               />
             </div>
+
+            {/* Department & Neighborhood */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Select
+                label="Département"
+                options={departmentOptions}
+                placeholder={formData.region ? "Sélectionner" : "Choisir d'abord une région"}
+                value={formData.department}
+                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                required
+              />
+              <Input
+                label="Quartier (optionnel)"
+                placeholder="Ex: Plateau, Almadies, Parcelles..."
+                value={formData.neighborhood}
+                onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+              />
+            </div>
+
+            {/* Address */}
+            <Input
+              label="Adresse (optionnel)"
+              placeholder="Ex: Rue 10, en face du marché..."
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
 
             {/* Price */}
             <Input

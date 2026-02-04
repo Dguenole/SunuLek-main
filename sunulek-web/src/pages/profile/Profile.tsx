@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
+import { getMediaUrl } from '@/lib/constants'
 
 export default function Profile() {
   const { user } = useAuthStore()
@@ -84,7 +85,7 @@ export default function Profile() {
                 <div className="relative">
                   {photoPreview || user?.avatar ? (
                     <img
-                      src={photoPreview || user?.avatar}
+                      src={photoPreview || getMediaUrl(user?.avatar)}
                       alt=""
                       className="w-24 h-24 rounded-full object-cover"
                     />

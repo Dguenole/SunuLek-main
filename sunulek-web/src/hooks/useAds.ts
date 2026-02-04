@@ -67,12 +67,13 @@ export function useAd(slug: string) {
   })
 }
 
-export function useMyAds() {
+export function useMyAds(status?: 'active' | 'pending' | 'deleted') {
   return useQuery({
-    queryKey: ['annonces', 'mine'],
+    queryKey: ['annonces', 'mine', status],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse<Ad>>('/annonces/my_ads/')
-      return data.results
+      const params = status ? `?status=${status}` : ''
+      const { data } = await api.get<Ad[]>(`/annonces/my_ads/${params}`)
+      return data
     },
   })
 }
@@ -98,17 +99,75 @@ export function useCreateAd() {
   })
 }
 
+export function useUpdateAd() {
+  const queryClient = useQueryClient()
+  const { addToast } = useToastStore()
+
+  return useMutation({
+    mutationFn: async ({ slug, formData }: { slug: string; formData: FormData }) => {
+      const { data } = await api.patch<Ad>(`/annonces/${slug}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data
+    },
+    onSuccess: (ad) => {
+      queryClient.invalidateQueries({ queryKey: ['annonces'] })
+      queryClient.invalidateQueries({ queryKey: ['annonces', ad.slug] })
+      addToast({ type: 'success', message: 'Annonce modifiée !' })
+    },
+    onError: () => {
+      addToast({ type: 'error', message: 'Erreur lors de la modification' })
+    },
+  })
+}
+
 export function useDeleteAd() {
   const queryClient = useQueryClient()
   const { addToast } = useToastStore()
 
   return useMutation({
     mutationFn: async (slug: string) => {
-      await api.delete(`/annonces/${slug}/`)
+      await api.post(`/annonces/${slug}/soft_delete/`)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['annonces'] })
-      addToast({ type: 'success', message: 'Annonce supprimée !' })
+      addToast({ type: 'success', message: 'Annonce déplacée vers la corbeille' })
+    },
+    onError: () => {
+      addToast({ type: 'error', message: 'Erreur lors de la suppression' })
+    },
+  })
+}
+
+export function useRestoreAd() {
+  const queryClient = useQueryClient()
+  const { addToast } = useToastStore()
+
+  return useMutation({
+    mutationFn: async (slug: string) => {
+      await api.post(`/annonces/${slug}/restore/`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['annonces'] })
+      addToast({ type: 'success', message: 'Annonce restaurée !' })
+    },
+    onError: () => {
+      addToast({ type: 'error', message: 'Erreur lors de la restauration' })
+    },
+  })
+}
+
+export function usePermanentDeleteAd() {
+  const queryClient = useQueryClient()
+  const { addToast } = useToastStore()
+
+  return useMutation({
+    mutationFn: async (slug: string) => {
+      await api.delete(`/annonces/${slug}/permanent_delete/`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['annonces'] })
+      addToast({ type: 'success', message: 'Annonce définitivement supprimée' })
     },
     onError: () => {
       addToast({ type: 'error', message: 'Erreur lors de la suppression' })

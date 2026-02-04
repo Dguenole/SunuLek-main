@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 import uuid
 from .models import Ad, AdImage, AdContact
+from apps.categories.models import Category
 
 
 class AdImageSerializer(serializers.ModelSerializer):
@@ -29,7 +30,7 @@ class AdListSerializer(serializers.ModelSerializer):
             'region', 'department', 'neighborhood',
             'category_name', 'user_name', 'primary_image',
             'views_count', 'favorites_count', 'is_favorited',
-            'is_featured', 'created_at'
+            'is_featured', 'status', 'deleted_at', 'created_at'
         ]
     
     def get_primary_image(self, obj):
@@ -112,17 +113,24 @@ class AdCreateSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    delete_images = serializers.CharField(write_only=True, required=False)
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+        required=True
+    )
     
     class Meta:
         model = Ad
         fields = [
             'title', 'description', 'price', 'is_negotiable',
             'category', 'region', 'department', 'neighborhood', 'address',
-            'images'
+            'images', 'delete_images'
         ]
     
     def create(self, validated_data):
         images_data = validated_data.pop('images', [])
+        validated_data.pop('delete_images', None)  # Remove if present
         
         # Generate unique slug
         base_slug = slugify(validated_data['title'])
@@ -147,22 +155,41 @@ class AdCreateSerializer(serializers.ModelSerializer):
         return ad
     
     def update(self, instance, validated_data):
-        images_data = validated_data.pop('images', None)
+        images_data = validated_data.pop('images', [])
+        delete_images_json = validated_data.pop('delete_images', None)
         
+        # Update basic fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         
-        # If new images provided, replace existing
+        # Delete specified images
+        if delete_images_json:
+            import json
+            try:
+                delete_ids = json.loads(delete_images_json)
+                if isinstance(delete_ids, list):
+                    instance.images.filter(id__in=delete_ids).delete()
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Add new images
         if images_data:
-            instance.images.all().delete()
+            existing_count = instance.images.count()
             for i, image in enumerate(images_data):
                 AdImage.objects.create(
                     ad=instance,
                     image=image,
-                    is_primary=(i == 0),
-                    order=i
+                    is_primary=(existing_count == 0 and i == 0),
+                    order=existing_count + i
                 )
+            
+            # Ensure there's a primary image
+            if not instance.images.filter(is_primary=True).exists():
+                first_image = instance.images.first()
+                if first_image:
+                    first_image.is_primary = True
+                    first_image.save()
         
         return instance
 

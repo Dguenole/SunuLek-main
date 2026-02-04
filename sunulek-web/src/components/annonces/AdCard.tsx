@@ -88,7 +88,7 @@ export default function AdCard({ ad, showFavorite = true }: AdCardProps) {
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <MapPin className="w-4 h-4" />
-              <span className="truncate">{ad.region}</span>
+              <span className="truncate">{ad.department || ad.region}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />

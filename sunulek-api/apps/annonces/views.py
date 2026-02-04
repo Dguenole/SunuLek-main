@@ -37,7 +37,7 @@ class AdViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create']:
             return [permissions.IsAuthenticated()]
-        elif self.action in ['update', 'partial_update', 'destroy']:
+        elif self.action in ['update', 'partial_update', 'destroy', 'soft_delete', 'restore', 'permanent_delete']:
             return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
         return [permissions.AllowAny()]
     
@@ -47,6 +47,26 @@ class AdViewSet(viewsets.ModelViewSet):
         elif self.action in ['create', 'update', 'partial_update']:
             return AdCreateSerializer
         return AdDetailSerializer
+    
+    def get_queryset(self):
+        """Override to allow owners to see their pending/deleted ads."""
+        user = self.request.user
+        
+        # For list view, show only active ads
+        if self.action == 'list':
+            return Ad.objects.filter(is_active=True, status='active', deleted_at__isnull=True)
+        
+        # For retrieve/update/delete, allow owner to access their own ads regardless of status
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy', 'soft_delete']:
+            if user.is_authenticated:
+                # Return ads that are either active OR owned by the user
+                from django.db.models import Q
+                return Ad.objects.filter(
+                    Q(is_active=True, status='active', deleted_at__isnull=True) | 
+                    Q(user=user, deleted_at__isnull=True)
+                )
+        
+        return Ad.objects.filter(is_active=True, status='active', deleted_at__isnull=True)
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -58,10 +78,74 @@ class AdViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def my_ads(self, request):
-        """Get current user's ads."""
-        ads = Ad.objects.filter(user=request.user, is_active=True)
+        """Get current user's ads (including pending and soft-deleted)."""
+        status_filter = request.query_params.get('status', None)
+        
+        # Get all user's ads (not permanently deleted)
+        ads = Ad.objects.filter(user=request.user)
+        
+        if status_filter == 'active':
+            ads = ads.filter(status='active', deleted_at__isnull=True)
+        elif status_filter == 'pending':
+            ads = ads.filter(status='pending', deleted_at__isnull=True)
+        elif status_filter == 'deleted':
+            ads = ads.filter(deleted_at__isnull=False)
+        else:
+            # Return all ads (for tab counts)
+            pass
+        
+        ads = ads.order_by('-created_at')
         serializer = AdListSerializer(ads, many=True, context={'request': request})
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def soft_delete(self, request, slug=None):
+        """Soft delete an ad (move to trash)."""
+        ad = self.get_object()
+        
+        if ad.user != request.user:
+            return Response(
+                {'error': 'Vous n\'êtes pas le propriétaire de cette annonce.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        ad.soft_delete()
+        return Response({'message': 'Annonce déplacée vers la corbeille.'})
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def restore(self, request, slug=None):
+        """Restore a soft-deleted ad."""
+        # Need to get from all ads, not just active ones
+        ad = Ad.objects.filter(slug=slug, user=request.user).first()
+        
+        if not ad:
+            return Response(
+                {'error': 'Annonce non trouvée.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if not ad.deleted_at:
+            return Response(
+                {'error': 'Cette annonce n\'est pas supprimée.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        ad.restore()
+        return Response({'message': 'Annonce restaurée avec succès.'})
+    
+    @action(detail=True, methods=['delete'], permission_classes=[permissions.IsAuthenticated])
+    def permanent_delete(self, request, slug=None):
+        """Permanently delete an ad from trash."""
+        ad = Ad.objects.filter(slug=slug, user=request.user, deleted_at__isnull=False).first()
+        
+        if not ad:
+            return Response(
+                {'error': 'Annonce non trouvée dans la corbeille.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        ad.delete()
+        return Response({'message': 'Annonce définitivement supprimée.'}, status=status.HTTP_204_NO_CONTENT)
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def contact(self, request, slug=None):
