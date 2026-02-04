@@ -258,27 +258,33 @@ export default function AnnonceDetail() {
           {/* Seller Card */}
           <Card>
             <h3 className="font-semibold text-gray-900 mb-4">Vendeur</h3>
-            <div className="flex items-center gap-4 mb-6">
+            <Link 
+              to={`/utilisateur/${ad.user?.id}`}
+              className="flex items-center gap-4 mb-6 group hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+            >
               {ad.user?.avatar ? (
                 <img 
                   src={getMediaUrl(ad.user.avatar)} 
                   alt="" 
-                  className="w-14 h-14 rounded-full object-cover" 
+                  className="w-14 h-14 rounded-full object-cover ring-2 ring-transparent group-hover:ring-primary-300 transition-all" 
                 />
               ) : (
-                <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center ring-2 ring-transparent group-hover:ring-primary-300 transition-all">
                   <User className="w-7 h-7 text-primary-600" />
                 </div>
               )}
               <div>
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
                   {ad.user?.full_name}
                 </p>
                 <p className="text-sm text-gray-500">
                   Membre depuis {new Date(ad.user?.date_joined || '').getFullYear()}
                 </p>
+                <p className="text-xs text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Voir le profil →
+                </p>
               </div>
-            </div>
+            </Link>
 
             {isOwner ? (
               <div className="space-y-3">

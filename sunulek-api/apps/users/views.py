@@ -16,6 +16,7 @@ from .serializers import (
     ResendVerificationSerializer,
     ChangePasswordSerializer,
     UpdateProfileSerializer,
+    PublicProfileSerializer,
 )
 
 User = get_user_model()
@@ -187,3 +188,13 @@ class LogoutView(APIView):
                 {'error': 'Token invalide.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+@extend_schema(tags=['User Profile'])
+class PublicProfileView(generics.RetrieveAPIView):
+    """Get public profile of a user by ID."""
+    
+    serializer_class = PublicProfileSerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
+    lookup_field = 'id'

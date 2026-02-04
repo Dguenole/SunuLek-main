@@ -104,3 +104,24 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'phone', 'avatar']
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    """Serializer for public user profile (visible to everyone)."""
+    
+    full_name = serializers.CharField(read_only=True)
+    member_since = serializers.SerializerMethodField()
+    ads_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'first_name', 'avatar', 
+            'full_name', 'member_since', 'ads_count', 'date_joined'
+        ]
+    
+    def get_member_since(self, obj):
+        return obj.date_joined.strftime('%B %Y')
+    
+    def get_ads_count(self, obj):
+        return obj.ads.filter(status='active', deleted_at__isnull=True).count()

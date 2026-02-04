@@ -59,9 +59,13 @@ function ConversationItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-medium text-gray-900 truncate">
+          <Link 
+            to={`/utilisateur/${conversation.other_user?.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="font-medium text-gray-900 truncate hover:text-primary-600 transition-colors"
+          >
             {conversation.other_user?.full_name}
-          </h3>
+          </Link>
           {conversation.last_message && (
             <span className="text-xs text-gray-500 flex-shrink-0">
               {formatMessageDate(conversation.last_message.created_at)}
@@ -194,9 +198,12 @@ function ConversationView({
         )}
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 truncate">
+          <Link 
+            to={`/utilisateur/${conversation.other_user?.id}`}
+            className="font-medium text-gray-900 truncate block hover:text-primary-600 transition-colors"
+          >
             {conversation.other_user?.full_name}
-          </h3>
+          </Link>
           <Link 
             to={`/annonces/${conversation.ad_slug}`}
             className="text-sm text-primary-600 hover:underline truncate block"

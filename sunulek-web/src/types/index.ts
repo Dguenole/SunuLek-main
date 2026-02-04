@@ -132,3 +132,14 @@ export interface ContactMessage {
   is_read: boolean
   created_at: string
 }
+
+export interface PublicProfile {
+  id: number
+  username: string
+  first_name: string
+  full_name: string
+  avatar?: string
+  member_since: string
+  ads_count: number
+  date_joined: string
+}

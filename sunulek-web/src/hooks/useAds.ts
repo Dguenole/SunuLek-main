@@ -10,6 +10,8 @@ interface AdsFilters {
   min_price?: string
   max_price?: string
   ordering?: string
+  user?: string | number
+  status?: string
 }
 
 export function useAds(filters: AdsFilters = {}) {
@@ -53,6 +55,17 @@ export function useLatestAds() {
       const { data } = await api.get<PaginatedResponse<Ad>>('/annonces/?ordering=-created_at')
       return data.results
     },
+  })
+}
+
+export function useUserAds(userId: string | number | undefined) {
+  return useQuery({
+    queryKey: ['annonces', 'user', userId],
+    queryFn: async () => {
+      const { data } = await api.get<PaginatedResponse<Ad>>(`/annonces/?user=${userId}`)
+      return data.results
+    },
+    enabled: !!userId,
   })
 }
 

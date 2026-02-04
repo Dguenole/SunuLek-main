@@ -1,9 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import api from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
 import { useToastStore } from '@/stores/toastStore'
-import type { User, AuthTokens } from '@/types'
+import type { User, AuthTokens, PublicProfile } from '@/types'
 
 interface LoginCredentials {
   email: string
@@ -141,5 +141,16 @@ export function useChangePassword() {
         message: error.response?.data?.old_password?.[0] || 'Erreur' 
       })
     },
+  })
+}
+
+export function usePublicProfile(userId: number | string) {
+  return useQuery({
+    queryKey: ['publicProfile', userId],
+    queryFn: async () => {
+      const { data } = await api.get<PublicProfile>(`/auth/profile/${userId}/`)
+      return data
+    },
+    enabled: !!userId,
   })
 }

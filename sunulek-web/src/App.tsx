@@ -13,6 +13,7 @@ import AnnonceDetail from '@/pages/annonces/AnnonceDetail'
 import CreateAnnonce from '@/pages/annonces/CreateAnnonce'
 import EditAnnonce from '@/pages/annonces/EditAnnonce'
 import Profile from '@/pages/profile/Profile'
+import PublicProfile from '@/pages/profile/PublicProfile'
 import MyAnnonces from '@/pages/profile/MyAnnonces'
 import Favorites from '@/pages/profile/Favorites'
 import Messages from '@/pages/profile/Messages'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
           <Route path="/annonces" element={<Annonces />} />
           <Route path="/annonces/:slug" element={<AnnonceDetail />} />
+          <Route path="/utilisateur/:userId" element={<PublicProfile />} />
           
           {/* Routes protégées */}
           <Route path="/annonces/creer" element={<ProtectedRoute><CreateAnnonce /></ProtectedRoute>} />

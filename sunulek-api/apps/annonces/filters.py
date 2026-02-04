@@ -10,7 +10,8 @@ class AdFilter(django_filters.FilterSet):
     category = django_filters.CharFilter(field_name='category__slug')
     region = django_filters.CharFilter(lookup_expr='iexact')
     department = django_filters.CharFilter(lookup_expr='iexact')
+    user = django_filters.NumberFilter(field_name='user__id')
     
     class Meta:
         model = Ad
-        fields = ['category', 'region', 'department', 'is_negotiable', 'is_featured']
+        fields = ['category', 'region', 'department', 'is_negotiable', 'is_featured', 'user']
