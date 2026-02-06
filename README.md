@@ -238,7 +238,7 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ## 👥 Équipe
 
-Développé avec ❤️ pour le Sénégal 🇸🇳
+Développé par Dguenole
 
 ---
 
